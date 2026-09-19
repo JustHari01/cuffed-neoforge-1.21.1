@@ -1,0 +1,57 @@
+package com.lazrproductions.cuffed.entity.renderer;
+
+import com.lazrproductions.cuffed.entity.CrumblingBlockEntity;
+import com.lazrproductions.cuffed.entity.model.CrumblingBlockModel;
+import com.lazrproductions.cuffed.init.ModModelLayers;
+import com.mojang.blaze3d.vertex.PoseStack;
+import javax.annotation.Nonnull;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+
+@OnlyIn(Dist.CLIENT)
+public class CrumblingBlockRenderer extends EntityRenderer<CrumblingBlockEntity> {
+   public static ResourceLocation TEXTURE_LOCATION_1 = ResourceLocation.fromNamespaceAndPath("cuffed", "textures/entity/crumbling_block_1.png");
+   public static ResourceLocation TEXTURE_LOCATION_2 = ResourceLocation.fromNamespaceAndPath("cuffed", "textures/entity/crumbling_block_2.png");
+   public static ResourceLocation TEXTURE_LOCATION_3 = ResourceLocation.fromNamespaceAndPath("cuffed", "textures/entity/crumbling_block_3.png");
+   public static ResourceLocation TEXTURE_LOCATION_4 = ResourceLocation.fromNamespaceAndPath("cuffed", "textures/entity/crumbling_block_4.png");
+   public CrumblingBlockModel<?> model;
+
+   public CrumblingBlockRenderer(Context ctx) {
+      super(ctx);
+      this.model = new CrumblingBlockModel(ctx.bakeLayer(ModModelLayers.CRUMBLING_BLOCK_LAYER));
+   }
+
+   public void render(
+      @Nonnull CrumblingBlockEntity entity, float p_114486_, float deltaTick, @Nonnull PoseStack stack, @Nonnull MultiBufferSource buffer, int bakedLight
+   ) {
+      super.render(entity, p_114486_, deltaTick, stack, buffer, bakedLight);
+      this.model.renderToBuffer(stack, buffer.getBuffer(RenderType.entityTranslucent(this.getTextureLocation(entity))), 15, getOverlayCoords(entity, 0.0F), -1);
+   }
+
+   public ResourceLocation getTextureLocation(@Nonnull CrumblingBlockEntity entity) {
+      switch (entity.getCrumbleProgress()) {
+         case 1:
+            return TEXTURE_LOCATION_1;
+         case 2:
+            return TEXTURE_LOCATION_2;
+         case 3:
+            return TEXTURE_LOCATION_3;
+         case 4:
+            return TEXTURE_LOCATION_4;
+         case 5:
+            return TEXTURE_LOCATION_4;
+         default:
+            return TEXTURE_LOCATION_1;
+      }
+   }
+
+   public static int getOverlayCoords(CrumblingBlockEntity entity, float f) {
+      return OverlayTexture.pack(OverlayTexture.u(f), OverlayTexture.v(false));
+   }
+}

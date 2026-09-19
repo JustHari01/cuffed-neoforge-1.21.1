@@ -1,0 +1,207 @@
+package com.lazrproductions.cuffed.items;
+
+import com.lazrproductions.cuffed.init.ModMenuTypes;
+import com.lazrproductions.cuffed.inventory.FriskingContainer;
+import com.lazrproductions.cuffed.inventory.FriskingMenu;
+import com.lazrproductions.cuffed.inventory.tooltip.PossessionsBoxTooltip;
+import com.lazrproductions.cuffed.utils.ItemTagUtils;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+import javax.annotation.Nonnull;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickAction;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemUtils;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item.Properties;
+import net.minecraft.world.item.Item.TooltipContext;
+import net.minecraft.world.level.Level;
+
+public class PossessionsBox extends Item {
+   public static final String TAG_ITEMS = "Items";
+
+   public PossessionsBox(Properties properties) {
+      super(properties);
+   }
+
+   public boolean overrideStackedOnOther(@Nonnull ItemStack thisStack, @Nonnull Slot slot, @Nonnull ClickAction click, @Nonnull Player player) {
+      if (thisStack.getCount() == 1 && click == ClickAction.SECONDARY) {
+         ItemStack otherStack = slot.getItem();
+         if (otherStack.isEmpty()) {
+            this.playRemoveOneSound(player);
+            removeOne(thisStack).ifPresent(p_150740_ -> add(thisStack, slot.safeInsert(p_150740_)));
+         }
+
+         return true;
+      } else {
+         return false;
+      }
+   }
+
+   public InteractionResultHolder<ItemStack> use(@Nonnull Level level, @Nonnull Player player, @Nonnull InteractionHand hand) {
+      ItemStack itemstack = player.getItemInHand(hand);
+      if (dropContents(itemstack, player) && player.isCrouching()) {
+         this.playDropContentsSound(player);
+         return InteractionResultHolder.sidedSuccess(itemstack, level.isClientSide());
+      } else {
+         return InteractionResultHolder.fail(itemstack);
+      }
+   }
+
+   public static ItemStack add(ItemStack stack, ItemStack stackToAdd) {
+      if (!stackToAdd.isEmpty()) {
+         CompoundTag compoundtag = ItemTagUtils.getOrCreateTag(stack);
+         if (!compoundtag.contains("Items")) {
+            compoundtag.put("Items", new ListTag());
+         }
+
+         int k = stackToAdd.getCount();
+         if (k == 0) {
+            return stackToAdd;
+         } else {
+            ListTag listtag = compoundtag.getList("Items", 10);
+            ItemStack itemstack1 = stackToAdd.copyWithCount(k);
+            CompoundTag compoundtag2 = ItemTagUtils.saveItem(itemstack1, null);
+            listtag.add(0, compoundtag2);
+            ItemTagUtils.setTag(stack, compoundtag);
+            return stackToAdd;
+         }
+      } else {
+         return stackToAdd;
+      }
+   }
+
+   private static Optional<ItemStack> removeOne(ItemStack stack) {
+      CompoundTag compoundtag = ItemTagUtils.getOrCreateTag(stack);
+      if (!compoundtag.contains("Items")) {
+         return Optional.empty();
+      } else {
+         ListTag listtag = compoundtag.getList("Items", 10);
+         if (listtag.isEmpty()) {
+            return Optional.empty();
+         } else {
+            CompoundTag compoundtag1 = listtag.getCompound(0);
+            ItemStack itemstack = ItemTagUtils.loadItem(compoundtag1, null);
+            listtag.remove(0);
+            if (listtag.isEmpty()) {
+               compoundtag.remove("Items");
+            } else {
+               compoundtag.put("Items", listtag);
+            }
+
+            ItemTagUtils.setTag(stack, compoundtag);
+            return Optional.of(itemstack);
+         }
+      }
+   }
+
+   private static boolean dropContents(ItemStack stack, Player player) {
+      CompoundTag compoundtag = ItemTagUtils.getOrCreateTag(stack);
+      if (player.isCrouching()) {
+         if (!compoundtag.contains("Items")) {
+            return false;
+         } else {
+            if (player instanceof ServerPlayer) {
+               ListTag listtag = compoundtag.getList("Items", 10);
+
+               for (int i = 0; i < listtag.size(); i++) {
+                  CompoundTag compoundtag1 = listtag.getCompound(i);
+                  ItemStack itemstack = ItemTagUtils.loadItem(compoundtag1, null);
+                  player.drop(itemstack, true);
+               }
+            }
+
+            compoundtag.remove("Items");
+            ItemTagUtils.setTag(stack, compoundtag);
+            return true;
+         }
+      } else {
+         return false;
+      }
+   }
+
+   public static Stream<ItemStack> getContents(ItemStack p_150783_) {
+      CompoundTag compoundtag = ItemTagUtils.getTag(p_150783_);
+      if (compoundtag == null) {
+         return Stream.empty();
+      } else {
+         ListTag listtag = compoundtag.getList("Items", 10);
+         return listtag.stream().map(CompoundTag.class::cast).map(tag -> ItemTagUtils.loadItem(tag, null));
+      }
+   }
+
+   public Component getName(@Nonnull ItemStack stack) {
+      CompoundTag compoundtag = ItemTagUtils.getOrCreateTag(stack);
+      if (compoundtag.contains("Items")) {
+         ListTag listtag = compoundtag.getList("Items", 10);
+         if (listtag.size() > 0) {
+            return Component.translatable(this.getDescriptionId(stack) + ".full");
+         }
+      }
+
+      return Component.translatable(this.getDescriptionId(stack) + ".empty");
+   }
+
+   public Optional<TooltipComponent> getTooltipImage(@Nonnull ItemStack p_150775_) {
+      NonNullList<ItemStack> nonnulllist = NonNullList.create();
+      getContents(p_150775_).forEach(nonnulllist::add);
+      return nonnulllist.size() > 0 ? Optional.of(new PossessionsBoxTooltip(nonnulllist)) : Optional.empty();
+   }
+
+   public void appendHoverText(@Nonnull ItemStack stack, @Nonnull TooltipContext context, @Nonnull List<Component> component, @Nonnull TooltipFlag p_150752_) {
+      CompoundTag compoundtag = ItemTagUtils.getOrCreateTag(stack);
+      if (!compoundtag.contains("Items")) {
+         component.add(Component.translatable("item.cuffed.possessions_box.lore.empty").withStyle(ChatFormatting.GRAY));
+      } else {
+         ListTag listtag = compoundtag.getList("Items", 10);
+         component.add(Component.translatable("item.cuffed.possessions_box.lore.full", new Object[]{listtag.size()}).withStyle(ChatFormatting.GRAY));
+      }
+   }
+
+   public void onDestroyed(@Nonnull ItemEntity p_150728_) {
+      ItemUtils.onContainerDestroyed(p_150728_, getContents(p_150728_.getItem()).toList());
+   }
+
+   private void playRemoveOneSound(Entity entity) {
+      entity.playSound(SoundEvents.BUNDLE_REMOVE_ONE, 0.8F, 0.8F + entity.level().getRandom().nextFloat() * 0.4F);
+   }
+
+   private void playDropContentsSound(Entity entity) {
+      entity.playSound(SoundEvents.BUNDLE_DROP_CONTENTS, 0.8F, 0.8F + entity.level().getRandom().nextFloat() * 0.4F);
+   }
+
+   public static void frisk(@Nonnull ServerPlayer frisker, @Nonnull final ServerPlayer player, @Nonnull final ItemStack boxStack) {
+      frisker.openMenu(
+         new MenuProvider() {
+            public Component getDisplayName() {
+               return player.getDisplayName();
+            }
+
+            public AbstractContainerMenu createMenu(int id, @Nonnull Inventory playerInventory, @Nonnull Player p) {
+               return new FriskingMenu(
+                  (MenuType<?>)ModMenuTypes.FRISKING_MENU.get(), id, playerInventory, player.getId(), new FriskingContainer(player, boxStack), 5
+               );
+            }
+         }
+      );
+   }
+}

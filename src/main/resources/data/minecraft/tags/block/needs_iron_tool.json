@@ -1,0 +1,9 @@
+{
+    "replace": false,
+    "values": [
+        "cuffed:cell_door",
+        "cuffed:reinforced_bars",
+        "cuffed:reinforced_bars_gap",
+        "cuffed:safe"
+    ]
+}

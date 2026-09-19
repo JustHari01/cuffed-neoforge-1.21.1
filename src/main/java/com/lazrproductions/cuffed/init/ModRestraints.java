@@ -1,0 +1,61 @@
+package com.lazrproductions.cuffed.init;
+
+import com.lazrproductions.cuffed.CuffedMod;
+import com.lazrproductions.cuffed.restraints.base.AbstractRestraint;
+import com.lazrproductions.cuffed.restraints.custom.BundleRestraint;
+import com.lazrproductions.cuffed.restraints.custom.DuckTapeArmsRestraint;
+import com.lazrproductions.cuffed.restraints.custom.DuckTapeHeadRestraint;
+import com.lazrproductions.cuffed.restraints.custom.DuckTapeLegsRestraint;
+import com.lazrproductions.cuffed.restraints.custom.FuzzyHandcuffsRestraint;
+import com.lazrproductions.cuffed.restraints.custom.HandcuffsArmsRestraint;
+import com.lazrproductions.cuffed.restraints.custom.HandcuffsLegsRestraint;
+import com.lazrproductions.cuffed.restraints.custom.PilloryRestraint;
+import com.lazrproductions.cuffed.restraints.custom.ShacklesArmsRestraint;
+import com.lazrproductions.cuffed.restraints.custom.ShacklesLegsRestraint;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
+
+public class ModRestraints {
+   private static boolean isInitialized = false;
+   public static final DeferredRegister<AbstractRestraint> RESTRAINTS = DeferredRegister.create(
+      ResourceLocation.fromNamespaceAndPath("cuffed", "restraints"), "cuffed"
+   );
+   public static final DeferredHolder<AbstractRestraint, BundleRestraint> BUNDLE = RESTRAINTS.register("bundle", BundleRestraint::new);
+   public static final DeferredHolder<AbstractRestraint, PilloryRestraint> PILLORY = RESTRAINTS.register("pillory", PilloryRestraint::new);
+   public static final DeferredHolder<AbstractRestraint, DuckTapeHeadRestraint> DUCK_TAPE_HEAD = RESTRAINTS.register(
+      "duck_tape_head", DuckTapeHeadRestraint::new
+   );
+   public static final DeferredHolder<AbstractRestraint, HandcuffsArmsRestraint> HANDCUFFS_ARMS = RESTRAINTS.register(
+      "handcuffs_arms", HandcuffsArmsRestraint::new
+   );
+   public static final DeferredHolder<AbstractRestraint, ShacklesArmsRestraint> SHACKLES = RESTRAINTS.register("shackles_arms", ShacklesArmsRestraint::new);
+   public static final DeferredHolder<AbstractRestraint, DuckTapeArmsRestraint> DUCK_TAPE_ARMS = RESTRAINTS.register(
+      "duck_tape_arms", DuckTapeArmsRestraint::new
+   );
+   public static final DeferredHolder<AbstractRestraint, HandcuffsLegsRestraint> HANDCUFFS_LEGS = RESTRAINTS.register(
+      "handcuffs_legs", HandcuffsLegsRestraint::new
+   );
+   public static final DeferredHolder<AbstractRestraint, ShacklesLegsRestraint> SHACKLES_LEGS = RESTRAINTS.register("shackles_legs", ShacklesLegsRestraint::new);
+   public static final DeferredHolder<AbstractRestraint, DuckTapeLegsRestraint> DUCK_TAPE_LEGS = RESTRAINTS.register(
+      "duck_tape_legs", DuckTapeLegsRestraint::new
+   );
+   public static final DeferredHolder<AbstractRestraint, FuzzyHandcuffsRestraint> FUZZY_HANDCUFFS = RESTRAINTS.register(
+      "fuzzy_handcuffs", FuzzyHandcuffsRestraint::new
+   );
+   public static Registry<AbstractRestraint> REGISTRY = null;
+
+   public static void register(IEventBus modEventBus) {
+      if (isInitialized) {
+         throw new IllegalStateException("Restraints already initialized");
+      } else {
+         REGISTRY = RESTRAINTS.makeRegistry(builder -> {
+         });
+         RESTRAINTS.register(modEventBus);
+         isInitialized = true;
+         CuffedMod.LOGGER.info("Registered restraints");
+      }
+   }
+}

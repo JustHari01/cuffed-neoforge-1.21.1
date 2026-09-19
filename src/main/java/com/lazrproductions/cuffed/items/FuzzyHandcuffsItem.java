@@ -1,0 +1,38 @@
+package com.lazrproductions.cuffed.items;
+
+import com.lazrproductions.cuffed.CuffedMod;
+import com.lazrproductions.cuffed.init.ModItems;
+import com.lazrproductions.cuffed.items.base.AbstractRestraintItem;
+import java.util.List;
+import javax.annotation.Nonnull;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item.Properties;
+import net.minecraft.world.item.Item.TooltipContext;
+
+public class FuzzyHandcuffsItem extends AbstractRestraintItem {
+   public FuzzyHandcuffsItem(Properties p) {
+      super(p);
+   }
+
+   public int getMaxDamage(ItemStack stack) {
+      return (Integer)CuffedMod.SERVER_CONFIG.RESTRAINT_DURABILITY_FUZZY_HANDCUFFS.get();
+   }
+
+   @Override
+   public void appendHoverText(@Nonnull ItemStack stack, @Nonnull TooltipContext level, @Nonnull List<Component> components, @Nonnull TooltipFlag tooltipFlag) {
+      components.add(Component.translatable("info.cuffed.restraint_type.arm").withStyle(ChatFormatting.GRAY));
+      components.add(Component.translatable("info.cuffed.restraint_type.leg").withStyle(ChatFormatting.GRAY));
+      components.add(Component.empty());
+      components.add(
+         Component.translatable("info.cuffed.restraint_type.my_key")
+            .withStyle(ChatFormatting.GRAY)
+            .append(" ")
+            .append(((Item)ModItems.HANDCUFFS_KEY.get()).getDefaultInstance().getHoverName().copy().withStyle(ChatFormatting.WHITE))
+      );
+      super.appendHoverText(stack, level, components, tooltipFlag);
+   }
+}

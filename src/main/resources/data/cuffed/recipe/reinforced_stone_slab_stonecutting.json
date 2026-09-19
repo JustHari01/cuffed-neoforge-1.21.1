@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "cuffed:reinforced_stone"
+  },
+  "result": { "id": "cuffed:reinforced_stone_slab", "count": 2 }
+}
